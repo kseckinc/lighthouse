@@ -73,3 +73,18 @@ jobs:
       with:
         name: results
         path: ${{ github.workspace }}/lighthouse/.tmp/layout-test-results
+    
+    # Run smoke tests via DevTools
+    - name: Define ToT chrome path
+      if: matrix.chrome-channel == 'ToT'
+      run: echo "CHROME_PATH=/home/runner/chrome-linux-tot/chrome" >> $GITHUB_ENV
+    - name: Install Chrome ToT
+      working-directory: /home/runner
+      run: bash $GITHUB_WORKSPACE/lighthouse-core/scripts/download-chrome.sh && mv chrome-linux chrome-linux-tot
+    - run: sudo apt-get install xvfb
+    - name: yarn smoke --runner devtools
+      # TODO: run on all tests.
+      # - Current DevTools hangs on any page with a service worker.
+      #   https://github.com/GoogleChrome/lighthouse/issues/13396
+      # - Should undock devtools because many expectations are sensitive to the default viewport size.
+      run: xvfb-run --auto-servernum yarn smoke --runner devtools seo

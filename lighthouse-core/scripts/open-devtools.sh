@@ -8,6 +8,14 @@ set -euo pipefail
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ##
 
+# 1) Builds Lighthouse for DevTools
+# 2) Rolls to local devtools repo. By default, this is the temporary checkout in .tmp
+# 3) Builds devtools frontend with new Lighthouse roll
+# 4) Opens $CHROME_PATH using new devtools frontend build, passing any additional args to Chrome.
+# 
+# Run `yarn test-devtools` first to update the temporary devtools checkout.
+# Specify `$DEVTOOLS_PATH` to use a different devtools repo.
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LH_ROOT="$SCRIPT_DIR/../.."
 TEST_DIR="$LH_ROOT/.tmp/chromium-web-tests"
@@ -23,7 +31,11 @@ echo "CHROME_PATH: $CHROME_PATH"
 echo "DEVTOOLS_PATH: $DEVTOOLS_PATH"
 
 if [ ! -d "$DEVTOOLS_PATH" ]; then
-  echo "No devtools found at $DEVTOOLS_PATH. Have you run 'yarn test-devtools' yet?"
+  echo "No devtools found at $DEVTOOLS_PATH."
+  if [ "$DEVTOOLS_PATH" = "$DEFAULT_DEVTOOLS_PATH" ]; then
+    echo "Have you run 'yarn test-devtools' yet?"
+  fi
+
   exit 1
 fi
 

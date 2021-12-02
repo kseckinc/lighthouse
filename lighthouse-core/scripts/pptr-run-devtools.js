@@ -35,7 +35,14 @@ const argv = y
     type: 'string',
     alias: 'd',
   })
+  .option('config', {
+    type: 'string',
+    alias: 'c',
+  })
   .argv;
+
+/** @type {LH.Config.Json=} */
+const config = argv.config ? JSON.parse(argv.config) : undefined;
 
 /**
  * https://source.chromium.org/chromium/chromium/src/+/main:third_party/devtools-frontend/src/front_end/test_runner/TestRunner.js;l=170;drc=f59e6de269f4f50bca824f8ca678d5906c7d3dc8
@@ -78,7 +85,7 @@ new Promise(resolve => {
   (${addSniffer.toString()})(
     panel.__proto__,
     methodName,
-    (lhr, artifacts) => resolve(lhr)
+    (lhr, artifacts) => resolve({lhr, artifacts})
   );
 });
 `;
@@ -105,6 +112,11 @@ const startLighthouse = `
   const panel = UI.panels.lighthouse || UI.panels.audits;
   const button = panel.contentElement.querySelector('button');
   if (button.disabled) throw new Error('Start button disabled');
+
+  // Give the main target model a moment to be available.
+  // Otherwise, 'SDK.TargetManager.TargetManager.instance().mainTarget()' is null.
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
   button.click();
 })()
 `;
@@ -125,9 +137,10 @@ function isValidUrl(url) {
  * @param {import('puppeteer').Page} page
  * @param {import('puppeteer').Browser} browser
  * @param {string} url
- * @return {Promise<string>}
+ * @param {LH.Config.Json=} config
+ * @return {Promise<{lhr: LH.Result, artifacts: LH.Artifacts}>}
  */
-async function testPage(page, browser, url) {
+async function testPage(page, browser, url, config) {
   const targets = await browser.targets();
   const inspectorTarget = targets.filter(t => t.url().includes('devtools'))[1];
   if (!inspectorTarget) throw new Error('No inspector found.');
@@ -146,6 +159,33 @@ async function testPage(page, browser, url) {
       })
       .catch(reject);
   });
+
+  if (config) {
+    session.send('Target.setAutoAttach', {
+      autoAttach: true, flatten: true, waitForDebuggerOnStart: false,
+    });
+    session.once('Target.attachedToTarget', async (event) => {
+      if (event.targetInfo.type !== 'worker') throw new Error('expected lighthouse worker');
+
+      const targets = await browser.targets();
+      const workerTarget = targets.find(t => t._targetId === event.targetInfo.targetId);
+      if (!workerTarget) throw new Error('No lighthouse worker target found.');
+
+      const workerSession = await workerTarget.createCDPSession();
+      await Promise.all([
+        workerSession.send('Runtime.enable'),
+        workerSession.send('Debugger.enable'),
+        new Promise(resolve => {
+          workerSession.once('Debugger.scriptParsed', resolve);
+        }),
+      ]);
+      await workerSession.send('Debugger.pause');
+      await workerSession.send('Runtime.evaluate', {
+        expression: `self.createConfig = () => (${JSON.stringify(config)});`,
+      });
+      await workerSession.send('Debugger.resume');
+    });
+  }
 
   /** @type {Omit<puppeteer.Protocol.Runtime.EvaluateResponse, 'result'>|undefined} */
   let startLHResponse;
@@ -178,11 +218,14 @@ async function testPage(page, browser, url) {
     returnByValue: true,
   }).catch(err => err);
 
-  if (!remoteLhrResponse.result || !remoteLhrResponse.result.value) {
+  if (!remoteLhrResponse.result?.value?.lhr) {
     throw new Error('Problem sniffing LHR.');
   }
+  if (!remoteLhrResponse.result?.value?.artifacts) {
+    throw new Error('Problem sniffing artifacts.');
+  }
 
-  return JSON.stringify(remoteLhrResponse.result.value, null, 2);
+  return remoteLhrResponse.result.value;
 }
 
 /**
@@ -229,8 +272,9 @@ async function run() {
   for (let i = 0; i < urlList.length; ++i) {
     const page = await browser.newPage();
     try {
-      const lhr = await testPage(page, browser, urlList[i]);
-      fs.writeFileSync(`${argv.o}/lhr-${i}.json`, lhr);
+      const {lhr, artifacts} = await testPage(page, browser, urlList[i], config);
+      fs.writeFileSync(`${argv.o}/lhr-${i}.json`, JSON.stringify(lhr, null, 2));
+      fs.writeFileSync(`${argv.o}/artifacts-${i}.json`, JSON.stringify(artifacts, null, 2));
     } catch (error) {
       errorCount += 1;
       console.error(error.message);
