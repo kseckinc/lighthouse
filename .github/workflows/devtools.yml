@@ -80,7 +80,7 @@ jobs:
       run: echo "CHROME_PATH=/home/runner/chrome-linux-tot/chrome" >> $GITHUB_ENV
     - name: Install Chrome ToT
       working-directory: /home/runner
-      run: bash $GITHUB_WORKSPACE/lighthouse-core/scripts/download-chrome.sh && mv chrome-linux chrome-linux-tot
+      run: bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/scripts/download-chrome.sh && mv chrome-linux chrome-linux-tot
     - run: sudo apt-get install xvfb
     - name: yarn smoke --runner devtools
       # TODO: run on all tests.
