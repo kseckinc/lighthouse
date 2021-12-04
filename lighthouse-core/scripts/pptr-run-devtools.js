@@ -261,7 +261,7 @@ async function run() {
     fs.mkdirSync(outputDir);
   }
 
-  const customDevtools = argv['custom-devtools-frontend'];
+  const customDevtools = argv['custom-devtools-frontend'] || process.env.DEVTOOLS_PATH;
 
   const browser = await puppeteer.launch({
     executablePath: process.env.CHROME_PATH,
