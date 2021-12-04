@@ -113,6 +113,8 @@ const startLighthouse = `
   const button = panel.contentElement.querySelector('button');
   if (button.disabled) throw new Error('Start button disabled');
 
+  UI.dockController.setDockSide('undocked');
+
   // Give the main target model a moment to be available.
   // Otherwise, 'SDK.TargetManager.TargetManager.instance().mainTarget()' is null.
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -272,7 +274,18 @@ async function run() {
   for (let i = 0; i < urlList.length; ++i) {
     const page = await browser.newPage();
     try {
-      const {lhr, artifacts} = await testPage(page, browser, urlList[i], config);
+      /** @type {NodeJS.Timeout} */
+      let timeout;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeout = setTimeout(reject, 100_000, new Error('Timed out waiting for Lighthouse to run'));
+      });
+      const {lhr, artifacts} = await Promise.race([
+        testPage(page, browser, urlList[i], config),
+        timeoutPromise,
+      ]).finally(() => {
+        clearTimeout(timeout);
+      });
+
       fs.writeFileSync(`${argv.o}/lhr-${i}.json`, JSON.stringify(lhr, null, 2));
       fs.writeFileSync(`${argv.o}/artifacts-${i}.json`, JSON.stringify(artifacts, null, 2));
     } catch (error) {

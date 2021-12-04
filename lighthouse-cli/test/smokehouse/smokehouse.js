@@ -146,8 +146,19 @@ async function runSmokeTest(smokeTestDefn, testOptions) {
 
     // Run Lighthouse.
     try {
+      /** @type {NodeJS.Timeout} */
+      let timeout;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeout = setTimeout(reject, 100_000, new Error('Timed out waiting for lighthouseRunner'));
+      });
+      const runnerResult = await Promise.race([
+        lighthouseRunner(requestedUrl, configJson, {isDebug, useFraggleRock}),
+        timeoutPromise,
+      ]).finally(() => {
+        clearTimeout(timeout);
+      });
       result = {
-        ...await lighthouseRunner(requestedUrl, configJson, {isDebug, useFraggleRock}),
+        ...runnerResult,
         networkRequests: takeNetworkRequestUrls ? takeNetworkRequestUrls() : undefined,
       };
     } catch (e) {
@@ -274,7 +285,6 @@ function getShardedDefinitions(testDefns, shardArg) {
   console.log(`In this shard (${shardArg}), running: ${shardDefns.map(d => d.id).join(' ')}\n`);
   return shardDefns;
 }
-
 
 export {
   runSmokehouse,
