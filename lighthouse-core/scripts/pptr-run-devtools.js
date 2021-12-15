@@ -117,7 +117,17 @@ const startLighthouse = `
 
   // Give the main target model a moment to be available.
   // Otherwise, 'SDK.TargetManager.TargetManager.instance().mainTarget()' is null.
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  const targetManager =
+    SDK.targetManager || (SDK.TargetManager.TargetManager || SDK.TargetManager).instance();
+  if (targetManager.mainTarget() === null) {
+    if (targetManager.observeTargets) {
+      await new Promise(resolve => targetManager.observeTargets({targetAdded: resolve}));
+    } else {
+      while (targetManager.mainTarget() === null) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+  }
 
   button.click();
 })()
