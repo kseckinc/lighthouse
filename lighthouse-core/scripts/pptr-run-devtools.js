@@ -120,7 +120,7 @@ const startLighthouse = `
   const targetManager =
     SDK.targetManager || (SDK.TargetManager.TargetManager || SDK.TargetManager).instance();
   if (targetManager.mainTarget() === null) {
-    if (targetManager.observeTargets) {
+    if (targetManager?.observeTargets) {
       await new Promise(resolve => targetManager.observeTargets({targetAdded: resolve}));
     } else {
       while (targetManager.mainTarget() === null) {
