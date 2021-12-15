@@ -121,7 +121,10 @@ const startLighthouse = `
     SDK.targetManager || (SDK.TargetManager.TargetManager || SDK.TargetManager).instance();
   if (targetManager.mainTarget() === null) {
     if (targetManager?.observeTargets) {
-      await new Promise(resolve => targetManager.observeTargets({targetAdded: resolve}));
+      await new Promise(resolve => targetManager.observeTargets({
+        targetAdded: resolve,
+        targetRemoved: () => {},
+      }));
     } else {
       while (targetManager.mainTarget() === null) {
         await new Promise(resolve => setTimeout(resolve, 100));
