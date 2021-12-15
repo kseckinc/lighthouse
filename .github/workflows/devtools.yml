@@ -76,7 +76,6 @@ jobs:
     
     # Run smoke tests via DevTools
     - name: Define ToT chrome path
-      if: matrix.chrome-channel == 'ToT'
       run: echo "CHROME_PATH=/home/runner/chrome-linux-tot/chrome" >> $GITHUB_ENV
     - name: Install Chrome ToT
       working-directory: /home/runner
