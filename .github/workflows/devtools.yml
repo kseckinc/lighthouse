@@ -77,7 +77,7 @@ jobs:
     # Run smoke tests via DevTools
     - name: Define ToT chrome path
       run: echo "CHROME_PATH=/home/runner/chrome-linux-tot/chrome" >> $GITHUB_ENV
-    - run: echo bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/scripts/download-chrome.sh && mv chrome-linux chrome-linux-tot
+    - run: echo bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/scripts/download-chrome.sh
     - run: ls $GITHUB_WORKSPACE
     - run: ls $GITHUB_WORKSPACE/lighthouse/lighthouse-core/scripts/
     - name: Install Chrome ToT 1
