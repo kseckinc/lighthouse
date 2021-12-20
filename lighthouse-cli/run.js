@@ -232,6 +232,10 @@ async function runLighthouse(url, flags, config) {
   let launchedChrome;
 
   try {
+    if (url && flags.auditMode) {
+      log.warn('CLI', 'URL parameter is ignored when using -A flag');
+    }
+
     const shouldGather = flags.gatherMode || flags.gatherMode === flags.auditMode;
     const shouldUseLocalChrome = URL.isLikeLocalhost(flags.hostname);
     if (shouldGather && shouldUseLocalChrome) {
