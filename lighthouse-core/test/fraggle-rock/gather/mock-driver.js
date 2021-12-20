@@ -218,7 +218,7 @@ function createMockContext() {
 }
 
 function mockDriverSubmodules() {
-  const navigationMock = {gotoURL: jest.fn()};
+  const navigationMock = {gotoURL: jest.fn(), normalizeUrl: jest.fn()};
   const prepareMock = {
     prepareThrottlingAndNetwork: jest.fn(),
     prepareTargetForTimespanMode: jest.fn(),
@@ -237,6 +237,7 @@ function mockDriverSubmodules() {
 
   function reset() {
     navigationMock.gotoURL = jest.fn().mockResolvedValue({finalUrl: 'https://example.com', warnings: [], timedOut: false});
+    navigationMock.normalizeUrl = jest.fn().mockImplementation(url => url);
     prepareMock.prepareThrottlingAndNetwork = jest.fn().mockResolvedValue(undefined);
     prepareMock.prepareTargetForTimespanMode = jest.fn().mockResolvedValue(undefined);
     prepareMock.prepareTargetForNavigationMode = jest.fn().mockResolvedValue({warnings: []});

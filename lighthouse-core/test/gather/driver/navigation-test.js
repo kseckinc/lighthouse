@@ -8,7 +8,11 @@
 const {createMockDriver, mockTargetManagerModule} = require('../../fraggle-rock/gather/mock-driver.js'); // eslint-disable-line max-len
 const targetManagerMock = mockTargetManagerModule();
 
-const {gotoURL, getNavigationWarnings} = require('../../../gather/driver/navigation.js');
+const {
+  gotoURL,
+  getNavigationWarnings,
+  normalizeUrl,
+} = require('../../../gather/driver/navigation.js');
 const {
   createMockOnceFn,
   makePromiseInspectable,
@@ -247,3 +251,34 @@ describe('.getNavigationWarnings()', () => {
     expect(warnings).toHaveLength(1);
   });
 });
+
+describe('.normalizeUrl', () => {
+  it('returns normalized URL', () => {
+    expect(normalizeUrl('https://example.com')).toEqual('https://example.com/');
+  });
+
+  it('rejects when not given a URL', () => {
+    expect(() => {
+      normalizeUrl(undefined);
+    }).toThrow('INVALID_URL');
+  });
+
+  it('rejects when given a URL of zero length', () => {
+    expect(() => {
+      normalizeUrl('');
+    }).toThrow('INVALID_URL');
+  });
+
+  it('rejects when given a URL without protocol', () => {
+    expect(() => {
+      normalizeUrl('localhost');
+    }).toThrow('INVALID_URL');
+  });
+
+  it('rejects when given a URL without hostname', () => {
+    expect(() => {
+      normalizeUrl('https://');
+    }).toThrow('INVALID_URL');
+  });
+});
+
