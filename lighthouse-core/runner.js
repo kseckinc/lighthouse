@@ -68,7 +68,7 @@ class Runner {
 
       // Use version from gathering stage.
       // If accessibility gatherer didn't run or errored, it won't be in credits.
-      const axeVersion = artifacts.Accessibility && artifacts.Accessibility.version;
+      const axeVersion = artifacts.Accessibility?.version;
       const credits = {
         'axe-core': axeVersion,
       };
@@ -153,7 +153,7 @@ class Runner {
     Sentry.captureBreadcrumb({
       message: 'Run started',
       category: 'lifecycle',
-      data: sentryContext && sentryContext.extra,
+      data: sentryContext?.extra,
     });
 
     // Gather phase
@@ -213,7 +213,7 @@ class Runner {
       };
     }).sort((a, b) => a.startTime - b.startTime);
     const runnerEntry = timingEntries.find(e => e.name === 'lh:runner:run');
-    return {entries: timingEntries, total: runnerEntry && runnerEntry.duration || 0};
+    return {entries: timingEntries, total: runnerEntry?.duration || 0};
   }
 
   /**
@@ -367,7 +367,7 @@ class Runner {
           return narrowedArtifacts;
         }, /** @type {LH.Artifacts} */ ({}));
       const product = await audit.audit(narrowedArtifacts, auditContext);
-      runWarnings.push(...product.runWarnings || []);
+      runWarnings.push(...(product.runWarnings || []));
 
       auditResult = Audit.generateAuditResult(audit, product);
     } catch (err) {
