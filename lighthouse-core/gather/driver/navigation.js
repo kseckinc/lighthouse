@@ -163,7 +163,7 @@ function getNavigationWarnings(navigation) {
  * @return {string}
  */
 function normalizeUrl(url) {
-  // verify the url is valid and that protocol is allowed
+  // Verify the url is valid and that protocol is allowed
   if (url && URL.isValid(url) && URL.isProtocolAllowed(url)) {
     // Use canonicalized URL (with trailing slashes and such)
     return new URL(url).href;
