@@ -10,14 +10,20 @@
 
 set -euo pipefail
 
+echo 0
+
 if [ "$OSTYPE" == "msys" ]; then
   url="https://download-chromium.appspot.com/dl/Win?type=snapshots"
 else
   url="https://download-chromium.appspot.com/dl/Linux_x64?type=snapshots"
 fi
 
+echo 1
 if [ -e "$CHROME_PATH" ]; then
+  echo 2
   echo "cached chrome found"
 else
+  echo 3
   wget "$url" --no-check-certificate -q -O chrome.zip && unzip -q chrome.zip
 fi
+echo 4
