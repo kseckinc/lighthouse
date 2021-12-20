@@ -14,7 +14,7 @@ const {
   awaitArtifacts,
 } = require('./runner-helpers.js');
 const prepare = require('../../gather/driver/prepare.js');
-const {gotoURL} = require('../../gather/driver/navigation.js');
+const {gotoURL, normalizeUrl} = require('../../gather/driver/navigation.js');
 const storage = require('../../gather/driver/storage.js');
 const emulation = require('../../lib/emulation.js');
 const {defaultNavigationConfig} = require('../../config/constants.js');
@@ -279,7 +279,7 @@ async function _cleanup({requestedUrl, driver, config}) {
  * @return {Promise<LH.RunnerResult|undefined>}
  */
 async function navigation(options) {
-  const {url: requestedUrl, page, configContext = {}} = options;
+  const {url, page, configContext = {}} = options;
   const {config} = initializeConfig(options.config, {...configContext, gatherMode: 'navigation'});
   const computedCache = new Map();
   const internalOptions = {
@@ -289,6 +289,7 @@ async function navigation(options) {
   return Runner.run(
     async () => {
       const driver = new Driver(page);
+      const requestedUrl = normalizeUrl(url);
       const context = {driver, config, requestedUrl, options: internalOptions};
       const {baseArtifacts} = await _setup(context);
       const {artifacts} = await _navigations({...context, baseArtifacts, computedCache});
@@ -297,7 +298,6 @@ async function navigation(options) {
       return finalizeArtifacts(baseArtifacts, artifacts);
     },
     {
-      url: requestedUrl,
       config,
       computedCache: new Map(),
     }

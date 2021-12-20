@@ -11,6 +11,7 @@ const {waitForFullyLoaded, waitForFrameNavigated, waitForUserToContinue} = requi
 const constants = require('../../config/constants.js');
 const i18n = require('../../lib/i18n/i18n.js');
 const URL = require('../../lib/url-shim.js');
+const LHError = require('../../lib/lh-error.js');
 
 const UIStrings = {
   /**
@@ -157,4 +158,18 @@ function getNavigationWarnings(navigation) {
   return warnings;
 }
 
-module.exports = {gotoURL, getNavigationWarnings, UIStrings};
+/**
+ * @param {string|undefined} url
+ * @return {string}
+ */
+function normalizeUrl(url) {
+  // verify the url is valid and that protocol is allowed
+  if (url && URL.isValid(url) && URL.isProtocolAllowed(url)) {
+    // Use canonicalized URL (with trailing slashes and such)
+    return new URL(url).href;
+  } else {
+    throw new LHError(LHError.errors.INVALID_URL);
+  }
+}
+
+module.exports = {gotoURL, getNavigationWarnings, normalizeUrl, UIStrings};
