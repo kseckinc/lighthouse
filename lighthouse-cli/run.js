@@ -232,8 +232,8 @@ async function runLighthouse(url, flags, config) {
   let launchedChrome;
 
   try {
-    if (url && flags.auditMode) {
-      log.warn('CLI', 'URL parameter is ignored when using -A flag');
+    if (url && flags.auditMode && !flags.gatherMode) {
+      log.warn('CLI', 'URL parameter is ignored if -A flag is used without -G flag');
     }
 
     const shouldGather = flags.gatherMode || flags.gatherMode === flags.auditMode;
