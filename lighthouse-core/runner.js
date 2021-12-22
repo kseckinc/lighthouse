@@ -44,6 +44,13 @@ class Runner {
        */
       const lighthouseRunWarnings = [];
 
+      const sentryContext = Sentry.getContext();
+      Sentry.captureBreadcrumb({
+        message: 'Run started',
+        category: 'lifecycle',
+        data: sentryContext?.extra,
+      });
+
       const artifacts = await this.gatherAndManageAssets(gatherFn, runOpts);
 
       // Potentially quit early
@@ -148,13 +155,6 @@ class Runner {
    */
   static async gatherAndManageAssets(gatherFn, options) {
     const settings = options.config.settings;
-
-    const sentryContext = Sentry.getContext();
-    Sentry.captureBreadcrumb({
-      message: 'Run started',
-      category: 'lifecycle',
-      data: sentryContext?.extra,
-    });
 
     // Gather phase
     // Either load saved artifacts off disk or from the browser
