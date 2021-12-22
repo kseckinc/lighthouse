@@ -51,7 +51,7 @@ class Runner {
         data: sentryContext?.extra,
       });
 
-      const artifacts = await this.gatherAndManageAssets(gatherFn, runOpts);
+      const artifacts = await this.gatherAndManageArtifacts(gatherFn, runOpts);
 
       // Potentially quit early
       if (settings.gatherMode && !settings.auditMode) return;
@@ -153,7 +153,7 @@ class Runner {
    * @param {{config: TConfig, driverMock?: Driver}} options
    * @return {Promise<LH.Artifacts>}
    */
-  static async gatherAndManageAssets(gatherFn, options) {
+  static async gatherAndManageArtifacts(gatherFn, options) {
     const settings = options.config.settings;
 
     // Gather phase
